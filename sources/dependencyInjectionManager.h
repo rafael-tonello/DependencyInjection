@@ -73,13 +73,13 @@ public:
 		// }
 	}
 
-	void addSingleton(function<void*()> createInstance, vector<string> typesAndNames = {}, bool instantiateImediately = false)
+	void addSingleton(function<void*()> createInstance, vector<string> additionalTypesAndNames = {}, bool instantiateImediately = false)
 	{	
 		OnDemandInstance p;
 		p.createInstance = createInstance;
 		p.instance = NULL;
 		p.typesAndNames = "";
-		for (auto c: typesAndNames)
+		for (auto c: additionalTypesAndNames)
 			p.typesAndNames += c;
 		
 		if (instantiateImediately)
@@ -90,34 +90,34 @@ public:
 	
 	///Pre instantiated singletons. Very util to create hosted services.
 	template <class T>
-	void addSingleton(T* instance, vector<string> typesAndNames = {})
+	void addSingleton(T* instance, vector<string> additionalTypesAndNames = {})
 	{
-		typesAndNames.push_back(typeid(T).name());
+		additionalTypesAndNames.push_back(typeid(T).name());
 		//TODO: pass instance as argument instead capturing it
 		this->addSingleton([instance](){
 			return (void*)instance;
-		}, typesAndNames, true);
+		}, additionalTypesAndNames, true);
 	}
 	
 	///Create the singleton only when needed
 	template <class T>
-	void addSingleton(function<T*()> createInstance, vector<string> typesAndNames = {})
+	void addSingleton(function<T*()> createInstance, vector<string> additionalTypesAndNames = {})
 	{
-		typesAndNames.push_back(typeid(T).name());
+		additionalTypesAndNames.push_back(typeid(T).name());
 		//TODO: pass createInstance as argument instead capturing it
 		this->addSingleton([createInstance](){
 			return (void*)createInstance();
-		}, typesAndNames, false);
+		}, additionalTypesAndNames, false);
 	}	
 
 	template <class T>
-	void addMultiInstance(function<T*()> createInstance, vector<string> typesAndNames = {})
+	void addMultiInstance(function<T*()> createInstance, vector<string> additionalTypesAndNames = {})
 	{	
 		OnDemandInstance p;
 		p.createInstance = createInstance;
 		p.instance = NULL;
 		p.typesAndNames = typeid(T).name();
-		for (auto c: typesAndNames)
+		for (auto c: additionalTypesAndNames)
 			p.typesAndNames += c;
 		
 		multiInstance.push_back(p);
