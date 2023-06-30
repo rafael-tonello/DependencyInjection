@@ -123,6 +123,12 @@ public:
 		multiInstance.push_back(p);
 	}	
 
+	template <class T>
+	void addTransient(function<T*()> createInstance, vector<string> additionalTypesAndNames = {})
+	{
+		addMultiInstance(createInstance, additionalTypesAndNames);
+	}
+
 	
 	template <class T>
 	T* get(string typeOrName)
