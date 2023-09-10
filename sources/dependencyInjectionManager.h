@@ -240,14 +240,6 @@ public:
 
 		
 	#endif
-
-	
-	/*template <class T>
-	void putBack(string name, T* instance)
-	{
-		if (multiInstance.count(name) > 0)
-			delete instance;
-	}*/
 };
 
 
@@ -270,5 +262,24 @@ public:
 }
 
 di->addSingleton<IAPI>("api2", new API2(di));*/
+
+#define DimProp(propname, interface) interface * propname() { return dim.get<interface>(); }
+#define DimGetProp(propname, interface) interface * get_##propname() { return dim.get<interface>(); }
+#define DimCtor(className) protected: DependencyInjectionManager &dim; public className(DependencyInjectionManager &dim): dim(dim)
+
+/*
+Diprop and Dictor allow the 'automatically' get services from dim as follow:
+
+class MyClass{
+private:
+    DimProp(log, ILogger);
+    DimProp(db, IDatabase);
+
+public:
+    DimCtor(MyClass){
+
+    }
+
+};*/
 
 #endif

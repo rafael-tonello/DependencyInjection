@@ -5,7 +5,6 @@ GeneralTester::GeneralTester()
 
 }
 
-
 vector<string> GeneralTester::getContexts()
 {
     return {"General"};
@@ -97,7 +96,10 @@ void GeneralTester::run(string context)
             .expected = string("working"),
             .returned = result,
         };
-
     });
  
 }
+
+
+
+
