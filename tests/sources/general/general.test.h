@@ -6,11 +6,10 @@
 
 using namespace std;
 
-
-
-
 class GeneralTester: public Tester{
-    
+private:
+    void testSetAndGet();
+    void testMacros();
 public:
 
     GeneralTester(); 

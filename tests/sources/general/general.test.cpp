@@ -13,6 +13,13 @@ vector<string> GeneralTester::getContexts()
 void GeneralTester::run(string context)
 {
     if (context != "General") return;
+
+    testSetAndGet();
+    testMacros();
+}
+
+void GeneralTester::testSetAndGet()
+{
     this->test("Set service", [](){
         class IService{ public: virtual string work() = 0; };
         class Service: public IService{ public: string work() override { return string("working"); }};
@@ -100,6 +107,83 @@ void GeneralTester::run(string context)
  
 }
 
+void GeneralTester::testMacros()
+{
+    test("DimCtProp macro", [&](){
+        class IService{ public: virtual string work() = 0; };
+        class Service: public IService{ public: string work() override { return string("working"); }};
 
+        class TmpClass{
+        public:
+            DIM &dim;
+
+            DimCtProp(dim, IService, service);
+
+
+            TmpClass(DIM &dim): dim(dim){}
+            string doSomething()
+            {
+                return this->service()->work();
+            }
+
+        };
+        DIM dim;
+        dim.addSingleton<IService>(new Service());
+        TmpClass *tmp = new TmpClass(dim);
+        auto result = tmp->doSomething();
+        delete tmp;
+
+        return result == "working";
+    });
+
+    test("DimCtPropP macro", [&](){
+        class IService{ public: virtual string work() = 0; };
+        class Service: public IService{ public: string work() override { return string("working"); }};
+
+        class TmpClass{
+        public:
+            DIM *dim;
+
+            DimCtPropP(dim, IService, service);
+
+
+            TmpClass(DIM *dim): dim(dim){}
+            string doSomething()
+            {
+                return this->service()->work();
+            }
+
+        };
+        DIM dim;
+        dim.addSingleton<IService>(new Service());
+        TmpClass *tmp = new TmpClass(&dim);
+        auto result = tmp->doSomething();
+        delete tmp;
+
+        return result == "working";
+    });
+
+    test("DimDfProp macro", [&](){
+        class IService{ public: virtual string work() = 0; };
+        class Service: public IService{ public: string work() override { return string("working"); }};
+
+        class TmpClass{
+        public:
+            DimDfProp(IService, service);
+
+            string doSomething()
+            {
+                return this->service()->work();
+            }
+
+        };
+        DIM::defaultInstance().addSingleton<IService>(new Service());
+
+        TmpClass tmp;
+        auto result = tmp.doSomething();
+
+        return result == "working";
+    });
+}
 
 
