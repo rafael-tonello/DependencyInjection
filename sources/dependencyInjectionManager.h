@@ -12,7 +12,7 @@
 
 		Example 2:
 			DependencyInjectionManager dim;
-			//another option is the use of names.. Names are very useful when services are requested inside modules.
+			//another option is the use of names.. Names are very useful when services are requested inside modules.b
 			dim.addSingleton<TheController>(new TheController(), {typeid(TheController).name(), typeid(ApiMediatorInterface).name()});
 			dim.addSingleton<PHOMAU>(new PHOMAU(5021, dim.get<ApiMediatorInterface>(typeid(ApiMediatorInterface).name()));
 
@@ -73,6 +73,10 @@ public:
 		// }
 	}
 
+	/// @brief add a new singleton using a function to create the object when it is first needed. As this function is not a template function, you should provide a name to recovery the object. This function is commonly used internally by the D/objectependencyInjectionManger
+	/// @param createInstance a function that return a void* to a service/object
+	/// @param addition/objectalTypesAndNames names used to identify the object/service
+	/// @param instantiateImediately if true, the 'createFunction' will be called immediately.
 	void addSingleton(function<void*()> createInstance, vector<string> additionalTypesAndNames = {}, bool instantiateImediately = false)
 	{	
 		OnDemandInstance p;
@@ -88,7 +92,10 @@ public:
 		singletons.push_back(p);
 	}
 	
-	///Pre instantiated singletons. Very util to create hosted services.
+	/// @brief Create a singleton service/object
+	/// @tparam T The interface or the class of the object
+	/// @param instance the instance o/objectf class that implements the interface (or calss) 'T'
+	/// @param additionalTypesAndNames additional names to identify the object.
 	template <class T>
 	void addSingleton(T* instance, vector<string> additionalTypesAndNames = {})
 	{
@@ -99,7 +106,10 @@ public:
 		}, additionalTypesAndNames, true);
 	}
 	
-	///Create the singleton only when needed
+	/// @brief Create a singleton service/object. The object will be created only the when the object is needed.
+	/// @tparam T The Interface of class of the object
+	/// @param createInstance A function that creates and returns the object
+	/// @param additionalTypesAndNames Additional names to identify the object
 	template <class T>
 	void addSingleton(function<T*()> createInstance, vector<string> additionalTypesAndNames = {})
 	{
@@ -110,6 +120,10 @@ public:
 		}, additionalTypesAndNames, false);
 	}	
 
+	/// @brief Create a multi-intance (transiente) object. The object will be created every time when it is needed.
+	/// @tparam T 
+	/// @param createInstance The function that creates and returns the object
+	/// @param additionalTypesAndNames Additional names to identify the object
 	template <class T>
 	void addMultiInstance(function<T*()> createInstance, vector<string> additionalTypesAndNames = {})
 	{	
@@ -121,17 +135,22 @@ public:
 			p.typesAndNames += c;
 		
 		multiInstance.push_back(p);
-	}	
+	}
 
+	/// @brief Create a multi-intance (transiente) object. The object will be created every time when it is needed. This method redirects the execution to the 'addMultiInstance' method.
+	/// @tparam T 
+	/// @param createInstance The function that creates and returns the object
+	/// @param additionalTypesAndNames Additional names to identify the object
 	template <class T>
 	void addTransient(function<T*()> createInstance, vector<string> additionalTypesAndNames = {})
 	{
 		addMultiInstance(createInstance, additionalTypesAndNames);
 	}
 
-	
-	template <class T>
-	T* get(string typeOrName)
+	/// @brief Returns an object/service using a name. This function is commonly used internally by the DependencyInjectionManager
+	/// @param typeOrName The name or identification of the object
+	/// @return 
+	void* getp(string typeOrName)
 	{
 		for (auto &c: singletons)
 		{
@@ -140,65 +159,49 @@ public:
 				if (c.instance == NULL)
 					c.instance = c.createInstance();
 
-				return (T*)c.instance;
+				return c.instance;
 			}
 		}
 
 		for (auto &c: multiInstance)
 		{
 			if (c.typesAndNames.find(typeOrName) != string::npos)
-				return (T*)c.createInstance();
+				return c.createInstance();
 		}
 		
 		return NULL;
 	}
 
+
+	/// @brief Returns an object/service, searching it using an id/name
+	/// @tparam T The interface type of the object/service
+	/// @param typeOrName the desired name/id
+	/// @return 
+	template <class T>
+	T* get(string typeOrName)
+	{
+		void *tmp = getp(typeOrName);
+
+		if (tmp == NULL)
+			return NULL;
+		
+		return (T*)tmp;
+	}
+
+	/// @brief Returns an object/service
+	/// @tparam T the interface type
+	/// @return 
 	template <class T>
 	T* get()
 	{
 		string type = typeid(T).name();
-		for (auto &c: singletons)
-		{
-			if (c.typesAndNames.find(type) != string::npos)
-			{
-				if (c.instance == NULL)
-					c.instance = c.createInstance();
 
-				return (T*)c.instance;
-			}
-		}
-
-		for (auto &c: multiInstance)
-		{
-			if (c.typesAndNames.find(type) != string::npos)
-				return (T*)c.createInstance();
-		}
-		
-		return NULL;
+		return get<T>(type);
 	}
 
-	template <class T>
-	bool contains()
-	{
-		string type = typeid(T).name();
-		for (auto &c: singletons)
-		{
-			if (c.typesAndNames.find(type) != string::npos)
-			{
-				return true;
-			}
-		}
-
-		for (auto &c: multiInstance)
-		{
-			if (c.typesAndNames.find(type) != string::npos)
-				return true;
-		}
-		
-		return false;
-	}
-
-	template <class T>
+	/// @brief Checks if the DependencyInjectionManager (the current instance) contains a service (if is prepared to return the object of type T). The serach by the service is done using and id/name
+	/// @param typeOrName the name/id
+	/// @return 
 	bool contains(string typeOrName)
 	{
 		for (auto &c: singletons)
@@ -216,6 +219,20 @@ public:
 		
 		return false;
 	}
+
+
+	/// @brief Check if the Dependency Injection Manager (the current instance) contains a service definition. Th search is done using the Interface Type 'T'
+	/// @tparam T The interface of the service
+	/// @return 
+	template <class T>
+	bool contains()
+	{
+		string type = typeid(T).name();
+		
+		return contains<T>(type);
+	}
+
+	
 
 	#ifdef __OBJECT_POOL__
 		template<class T>
