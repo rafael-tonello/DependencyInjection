@@ -52,6 +52,8 @@ private:
 #ifdef __TESTING__
     public:
 #endif
+	static DependencyInjectionManager *_defaultInstance;
+
 	int autoNameCount = 0;
 	vector<OnDemandInstance> singletons;
 	vector<OnDemandInstance> multiInstance;
@@ -232,6 +234,10 @@ public:
 		return contains<T>(type);
 	}
 
+
+	static DependencyInjectionManager *defaultInstancep(){ if (_defaultInstance == nullptr; _defaultInstance = new DependencyInjectionManager(); return _defaultInstance;) };
+	static DependencyInjectionManager &defaultInstance(){ auto p = *defaultInstance(); return *p;};
+
 	
 
 	#ifdef __OBJECT_POOL__
@@ -241,6 +247,8 @@ public:
 		
 	#endif
 };
+
+DependencyInjectionManager* DependencyInjectionManager::_defaultInstance = nullptr;
 
 
 
@@ -263,9 +271,27 @@ public:
 
 di->addSingleton<IAPI>("api2", new API2(di));*/
 
-#define DimProp(propname, interface) interface * propname() { return dim.get<interface>(); }
-#define DimGetProp(propname, interface) interface * get_##propname() { return dim.get<interface>(); }
+//Automatically creates a service/object property and get the  respective value from a DependencyInjectionManagerObject
+#define DimCtProp(dimObjectP, propname, interface) \
+	interface* _##propname = nullptr;\
+	interface * propname() {\
+		if (_##propname == nullptr)\
+			_##propname = dimObjectP->get<interface>();\
+		return _##propname;\
+	}
+
+///Automatically creates service/object property ang get its respective value from a DependencyInjectionManger object. The DIM Object should be available as "DependencyInjectionManager &dim" within the class
+#define DimProp(propname, interface) \
+	interface* _##propname = nullptr;\
+	interface * propname() {\
+		if (_##propname == nullptr)\
+			_##propname = dim.get<interface>();\
+		return _##propname;\
+	}
+
+///Defines a constructors that receives a DependencyInjectionManager& as parameter and creates (and sets) a class property for this DIM as "DependencyInjectionManager &dim"
 #define DimCtor(className) protected: DependencyInjectionManager &dim; public className(DependencyInjectionManager &dim): dim(dim)
+
 
 /*
 Diprop and Dictor allow the 'automatically' get services from dim as follow:
@@ -281,5 +307,16 @@ public:
     }
 
 };*/
+
+
+///creates a service/object property and automatically get its respective values from the default instance of DependencyInjectioManager (DependencyInjectionManager::defaultIntancep())
+#define DimDfProp(propname, interface) \
+	interface* _##propname = nullptr;\
+	interface * propname() {\
+		if (_##propname == nullptr)\
+			_##propname = DependencyInjectionManager::defaultInstancep()->get<interface>();\
+		return _##propname;\
+	}
+
 
 #endif
