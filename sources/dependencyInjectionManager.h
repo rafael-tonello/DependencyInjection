@@ -330,10 +330,10 @@ public:
 ///creates a service/object property and automatically get its respective values from the default instance of DependencyInjectioManager (DependencyInjectionManager::defaultIntancep())
 #define DimDfProp(interface, propname) \
 	interface* _##propname = nullptr;\
-	interface * propname() {\
+	interface &propname() {\
 		if (_##propname == nullptr)\
 			_##propname = DependencyInjectionManager::defaultInstance().get<interface>();\
-		return _##propname;\
+		return *(_##propname);\
 	}
 
 
