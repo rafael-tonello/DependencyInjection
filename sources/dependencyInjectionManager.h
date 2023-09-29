@@ -149,11 +149,64 @@ public:
 		addMultiInstance(createInstance, additionalTypesAndNames);
 	}
 
+
+	/// @brief Foreach over all services. Note that this function will note create any instance of the services, and will just
+	/// retuns the information necessary to create the service. If the service is a singleton and is already created, you can access it on .instance
+	// of the itens.
+	/// @param fSingletons 
+	/// @param fTransients 
+	void foreachAll(function<void(OnDemandInstance& service)> fSingletons, function<void(OnDemandInstance& service)> fTransients)
+	{
+		for (auto &c: singletons)
+			fSingletons(c);
+
+		for (auto &c: multiInstance)
+			fTransients(c);
+	}
+
+	vector<void*> getAllP(string typeOrName)
+	{
+		vector<void*> ret;
+		foreachAll([&](OnDemandInstance& curr){
+			if (curr.typesAndNames.find(typeOrName) != string::npos)
+			{
+				if (curr.instance == NULL)
+					curr.instance = curr.createInstance();
+
+				ret.push_back(curr.instance);
+			}
+		}, [&](OnDemandInstance& curr){
+			if (curr.typesAndNames.find(typeOrName) != string::npos)
+				ret.push_back(curr.createInstance());
+		});
+
+		return ret;
+	}
+
+	template <class T>
+	vector<T*> getAll(string typeOrName)
+	{
+		vector<T*> result;
+		void *tmp = getAllP(typeOrName);
+
+		for (auto c: tmp)
+			result.push_back((T*)curr);
+
+		return result;
+	}
+
+	template <class T>
+	vector<T*> getAll()
+	{
+		return get(typeid(T).name());
+	}
+
 	/// @brief Returns an object/service using a name. This function is commonly used internally by the DependencyInjectionManager
 	/// @param typeOrName The name or identification of the object
 	/// @return 
 	void* getp(string typeOrName)
 	{
+
 		for (auto &c: singletons)
 		{
 			if (c.typesAndNames.find(typeOrName) != string::npos)
