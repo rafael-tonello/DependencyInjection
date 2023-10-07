@@ -187,10 +187,10 @@ public:
 	vector<T*> getAll(string typeOrName)
 	{
 		vector<T*> result;
-		void *tmp = getAllP(typeOrName);
+		auto *tmp = getAllP(typeOrName);
 
 		for (auto c: tmp)
-			result.push_back((T*)curr);
+			result.push_back((T*)c);
 
 		return result;
 	}
@@ -198,7 +198,7 @@ public:
 	template <class T>
 	vector<T*> getAll()
 	{
-		return get(typeid(T).name());
+		return get<T>(string(typeid(T).name()));
 	}
 
 	/// @brief Returns an object/service using a name. This function is commonly used internally by the DependencyInjectionManager
